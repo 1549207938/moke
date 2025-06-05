@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墨课助手 - 书法家教管理平台</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background-color: #f8f5f0;
+            color: #333;
+        }
+        
+        .calligraphy-bg {
+            background-image: url('https://s.coze.cn/image/yXcPeHiy1uA/');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            background-color: rgba(248, 245, 240, 0.9);
+        }
+        
+        .ink-color {
+            color: #333;
+        }
+        
+        .paper-color {
+            background-color: #f8f5f0;
+        }
+        
+        .sidebar-item {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-left-color: #8b5a2b;
+        }
+        
+        .sidebar-item.active {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-left-color: #8b5a2b;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .calendar-day {
+            min-height: 80px;
+            border: 1px solid #e5e5e5;
+        }
+        
+        .calendar-event {
+            font-size: 12px;
+            padding: 2px 4px;
+            margin: 2px 0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .mobile-menu.active {
+            max-height: 500px;
+        }
+        
+        .recurring-badge {
+            background-color: rgba(79, 70, 229, 0.1);
+            color: #4f46e5;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+        }
+        
+        @media (min-width: 768px) {
+            .sidebar {
+                width: 250px;
+                min-width: 250px;
+            }
+            
+            .main-content {
+                margin-left: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="calligraphy-bg">
+    <!-- 顶部导航 -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-pen-nib text-2xl text-amber-800 mr-2"></i>
+                    <span class="text-xl font-bold ink-color">墨课助手</span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#dashboard" class="hover:text-amber-800 transition-colors">首页</a>
+                    <a href="#courses" class="hover:text-amber-800 transition-colors">课程管理</a>
+                    <a href="#students" class="hover:text-amber-800 transition-colors">学生管理</a>
+                    <a href="#calendar" class="hover:text-amber-800 transition-colors">时间表</a>
+                </div>
+                
+                <div class="md:hidden">
+                    <button id="mobileMenuBtn" class="text-gray-700 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobileMenu" class="mobile-menu bg-white md:hidden">
+            <div class="px-4 py-2">
+                <a href="#dashboard" class="block py-2 hover:text-amber-800">首页</a>
+                <a href="#courses" class="block py-2 hover:text-amber-800">课程管理</a>
+                <a href="#students" class="block py-2 hover:text-amber-800">学生管理</a>
+                <a href="#calendar" class="block py-2 hover:text-amber-800">时间表</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- 侧边栏 -->
+        <div class="sidebar hidden md:block fixed h-full bg-white shadow-md">
+            <div class="p-4">
+                <div class="flex items-center mb-8">
+                    <img src="undefined" class="w-12 h-12 rounded-full mr-3" alt="老师头像">
+                    <div>
+                        <p class="font-semibold">王老师</p>
+                        <p class="text-sm text-gray-500">书法家教</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <a href="#dashboard" class="sidebar-item flex items-center px-4 py-3">
+                        <i class="fas fa-home mr-3"></i>
+                        <span>首页</span>
+                    </a>
+                    <a href="#courses" class="sidebar-item flex items-center px-4 py-3">
+                        <i class="fas fa-book-open mr-3"></i>
+                        <span>课程管理</span>
+                    </a>
+                    <a href="#students" class="sidebar-item flex items-center px-4 py-3">
+                        <i class="fas fa-users mr-3"></i>
+                        <span>学生管理</span>
+                    </a>
+                    <a href="#calendar" class="sidebar-item flex items-center px-4 py-3">
+                        <i class="fas fa-calendar-alt mr-3"></i>
+                        <span>时间表</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content flex-1">
+            <!-- 首页 -->
+            <section id="dashboard" class="p-4 md:p-8">
+                <div class="mb-8">
+                    <h1 class="text-2xl md:text-3xl font-bold mb-4">今日课程预览</h1>
+                    
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程名称</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生姓名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上课时间</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上课地点</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">硬笔书法基础</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">张三</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">09:00 - 10:30</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">线上</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">毛笔书法进阶</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">李四</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">14:00 - 15:30</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">书法教室</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">楷书临摹</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">王五</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">16:00 - 17:30</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">线上</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <h2 class="text-xl font-bold mb-4">待办事项提醒</h2>
+                        
+                        <div class="mb-4">
+                            <h3 class="font-semibold text-red-600 mb-2">未确认课程</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-center">
+                                    <span class="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
+                                    <span>课程编号: C2024001 - 张三 - 2024-06-15 10:00</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <span class="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
+                                    <span>课程编号: C2024002 - 李四 - 2024-06-16 14:00</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-semibold text-amber-600 mb-2">学生欠费</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-center">
+                                    <span class="w-2 h-2 bg-amber-600 rounded-full mr-2"></span>
+                                    <span>王五 - 欠费金额: ¥800 - 课程: 楷书临摹</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <h2 class="text-xl font-bold mb-4">快捷创建</h2>
+                        
+                        <div class="space-y-4">
+                            <button class="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 py-2 px-4 rounded flex items-center justify-center transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                <span>创建新课程</span>
+                            </button>
+                            
+                            <button class="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 py-2 px-4 rounded flex items-center justify-center transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                <span>添加新学生</span>
+                            </button>
+                            
+                            <button class="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 py-2 px-4 rounded flex items-center justify-center transition-colors">
+                                <i class="fas fa-calendar-plus mr-2"></i>
+                                <span>创建预约</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 课程管理 -->
+            <section id="courses" class="p-4 md:p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-2xl md:text-3xl font-bold mb-6">课程管理</h1>
+                    
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <button class="bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span>创建新课程</span>
+                        </button>
+                        
+                        <div class="flex items-center bg-white rounded-lg shadow-sm overflow-hidden">
+                            <select class="appearance-none bg-white border-none py-2 px-4 pr-8 focus:outline-none">
+                                <option>全部课程</option>
+                                <option>硬笔书法</option>
+                                <option>毛笔书法</option>
+                                <option>篆刻</option>
+                            </select>
+                            <div class="pointer-events-none flex items-center px-2 text-gray-500">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 min-w-[200px]">
+                            <input type="text" placeholder="搜索课程..." class="w-full bg-white border-none rounded-lg shadow-sm py-2 px-4 focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+                            <div class="border border-gray-200 rounded-lg p-4 card-hover">
+                                <h3 class="font-bold mb-2">硬笔书法基础</h3>
+                                <p class="text-sm text-gray-500 mb-2">张三</p>
+                                <p class="text-sm mb-2">2024-06-15 09:00-10:30</p>
+                                <p class="text-sm text-gray-500">线上</p>
+                                <div class="mt-4 flex space-x-2">
+                                    <button class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">编辑</button>
+                                    <button class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">详情</button>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 card-hover">
+                                <h3 class="font-bold mb-2">毛笔书法进阶</h3>
+                                <p class="text-sm text-gray-500 mb-2">李四</p>
+                                <p class="text-sm mb-2">2024-06-15 14:00-15:30</p>
+                                <p class="text-sm text-gray-500">书法教室</p>
+                                <div class="mt-4 flex space-x-2">
+                                    <button class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">编辑</button>
+                                    <button class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">详情</button>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 card-hover">
+                                <h3 class="font-bold mb-2">楷书临摹</h3>
+                                <p class="text-sm text-gray-500 mb-2">王五</p>
+                                <p class="text-sm mb-2">2024-06-15 16:00-17:30</p>
+                                <p class="text-sm text-gray-500">线上</p>
+                                <div class="mt-4 flex space-x-2">
+                                    <button class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">编辑</button>
+                                    <button class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">详情</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h2 class="text-xl font-bold mb-4">创建/编辑课程</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">课程名称</label>
+                                <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">日期与时间</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <input type="date" class="bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                    <input type="time" class="bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">课程类型</label>
+                                <div class="flex items-center space-x-4">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="course_type" value="single" checked class="text-amber-600 focus:ring-amber-500">
+                                        <span class="ml-2">单次课程</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="course_type" value="recurring" class="text-amber-600 focus:ring-amber-500">
+                                        <span class="ml-2">周期性课程</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="recurringOptions" class="hidden">
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-2">重复周期</label>
+                                    <select class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                        <option>每周</option>
+                                        <option>每两周</option>
+                                        <option>每月</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-2">选择星期</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周一</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周二</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周三</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周四</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周五</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周六</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" class="rounded text-amber-600 focus:ring-amber-500">
+                                            <span class="ml-1">周日</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 mb-2">结束日期</label>
+                                    <input type="date" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">学生姓名（可多选）</label>
+                                <select multiple class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500 h-[100px]">
+                                    <option>张三</option>
+                                    <option>李四</option>
+                                    <option>王五</option>
+                                    <option>赵六</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">上课地点</label>
+                                <div class="flex items-center space-x-4 mb-2">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="location_type" checked class="text-amber-600 focus:ring-amber-500">
+                                        <span class="ml-2">线上</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="location_type" class="text-amber-600 focus:ring-amber-500">
+                                        <span class="ml-2">线下</span>
+                                    </label>
+                                </div>
+                                <input type="text" placeholder="会议链接或详细地址" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">备注</label>
+                                <textarea class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500 h-[120px]" placeholder="课程内容、小结等..."></textarea>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button class="bg-amber-600 hover:bg-amber-700 text-white py-2 px-6 rounded-lg">保存课程</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 学生管理 -->
+            <section id="students" class="p-4 md:p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-2xl md:text-3xl font-bold mb-6">学生管理</h1>
+                    
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <button class="bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            <span>添加新学生</span>
+                        </button>
+                        
+                        <div class="flex-1 min-w-[200px]">
+                            <input type="text" placeholder="搜索学生..." class="w-full bg-white border-none rounded-lg shadow-sm py-2 px-4 focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">联系方式</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年龄</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上课频率</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">缴费状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">张三</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">138****1234</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">12</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">每周2次</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">已缴费</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button class="text-amber-600 hover:text-amber-800 mr-2">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-gray-600 hover:text-gray-800">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">李四</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">139****5678</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">15</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">每周1次</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">已缴费</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button class="text-amber-600 hover:text-amber-800 mr-2">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-gray-600 hover:text-gray-800">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">王五</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">137****9012</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">10</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">每周2次</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">欠费</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button class="text-amber-600 hover:text-amber-800 mr-2">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-gray-600 hover:text-gray-800">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-4">添加/编辑学生资料</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">姓名</label>
+                                <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">联系方式</label>
+                                <input type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">年龄</label>
+                                <input type="number" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">上课频率</label>
+                                <select class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                    <option>每周1次</option>
+                                    <option>每周2次</option>
+                                    <option>每周3次</option>
+                                    <option>每月1次</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">缴费状态</label>
+                                <select class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                    <option>已缴费</option>
+                                    <option>欠费</option>
+                                    <option>未缴费</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button class="bg-amber-600 hover:bg-amber-700 text-white py-2 px-6 rounded-lg">保存学生信息</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 时间表 -->
+            <section id="calendar" class="p-4 md:p-8 hidden">
+                <div class="mb-8">
+                    <h1 class="text-2xl md:text-3xl font-bold mb-6">时间表</h1>
+                    
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center space-x-4">
+                            <button class="bg-white rounded-lg shadow-sm p-2 hover:bg-gray-50">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h2 class="text-xl font-semibold">2024年6月</h2>
+                            <button class="bg-white rounded-lg shadow-sm p-2 hover:bg-gray-50">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <button class="bg-amber-600 text-white px-4 py-2 rounded-lg">周</button>
+                            <button class="bg-white px-4 py-2 rounded-lg shadow-sm hover:bg-gray-50">月</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="grid grid-cols-7 bg-gray-50 border-b">
+                            <div class="p-3 text-center font-medium">周日</div>
+                            <div class="p-3 text-center font-medium">周一</div>
+                            <div class="p-3 text-center font-medium">周二</div>
+                            <div class="p-3 text-center font-medium">周三</div>
+                            <div class="p-3 text-center font-medium">周四</div>
+                            <div class="p-3 text-center font-medium">周五</div>
+                            <div class="p-3 text-center font-medium">周六</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7">
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">26</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">27</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">28</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">29</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">30</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">31</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">1</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7">
+                            <div class="calendar-day p-2">
+                                <div class="text-right">2</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">3</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">4</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">5</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">6</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">7</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">8</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7">
+                            <div class="calendar-day p-2">
+                                <div class="text-right">9</div>
+                                <div class="calendar-event bg-blue-100 text-blue-800">硬笔书法基础 - 张三</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">10</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">11</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">12</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">13</div>
+                                <div class="calendar-event bg-green-100 text-green-800">毛笔书法进阶 - 李四 <span class="recurring-badge">每周</span></div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">14</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">15</div>
+                                <div class="calendar-event bg-blue-100 text-blue-800">硬笔书法基础 - 张三</div>
+                                <div class="calendar-event bg-green-100 text-green-800">毛笔书法进阶 - 李四 <span class="recurring-badge">每周</span></div>
+                                <div class="calendar-event bg-purple-100 text-purple-800">楷书临摹 - 王五</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7">
+                            <div class="calendar-day p-2">
+                                <div class="text-right">16</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">17</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">18</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">19</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">20</div>
+                                <div class="calendar-event bg-green-100 text-green-800">毛笔书法进阶 - 李四 <span class="recurring-badge">每周</span></div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">21</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">22</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7">
+                            <div class="calendar-day p-2">
+                                <div class="text-right">23</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">24</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">25</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">26</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">27</div>
+                                <div class="calendar-event bg-green-100 text-green-800">毛笔书法进阶 - 李四 <span class="recurring-badge">每周</span></div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">28</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right">29</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-7">
+                            <div class="calendar-day p-2">
+                                <div class="text-right">30</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">1</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">2</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">3</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">4</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">5</div>
+                            </div>
+                            <div class="calendar-day p-2">
+                                <div class="text-right text-gray-400">6</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <footer class="bg-white py-6 border-t mt-8">
+        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>created by <a href="https://space.coze.cn" class="text-amber-600 hover:text-amber-800">coze space</a></p>
+            <p class="mt-1">页面内容均由 AI 生成，仅供参考</p>
+        </div>
+    </footer>
+
+    <script>
+        // 移动端菜单切换
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('mobileMenu').classList.toggle('active');
+        });
+        
+        // 课程类型切换
+        document.querySelectorAll('input[name="course_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const recurringOptions = document.getElementById('recurringOptions');
+                if (this.value === 'recurring') {
+                    recurringOptions.classList.remove('hidden');
+                } else {
+                    recurringOptions.classList.add('hidden');
+                }
+            });
+        });
+        
+        // 导航切换
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // 更新侧边栏活动状态
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const activeItem = document.querySelector(`.sidebar-item[href="#${sectionId}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }
+        
+        // 默认显示首页
+        showSection('dashboard');
+        
+        // 处理导航点击
+        document.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('#') && this.getAttribute('href').length > 1) {
+                    e.preventDefault();
+                    const sectionId = this.getAttribute('href').substring(1);
+                    showSection(sectionId);
+                    
+                    // 如果是移动端菜单中的链接，点击后关闭菜单
+                    if (this.closest('#mobileMenu')) {
+                        document.getElementById('mobileMenu').classList.remove('active');
+                    }
+                    
+                    // 平滑滚动到对应区域
+                    document.getElementById(sectionId).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // 页面加载时根据hash显示对应区域
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash) {
+                const sectionId = window.location.hash.substring(1);
+                showSection(sectionId);
+            }
+        });
+    </script>
+</body>
+</html>
